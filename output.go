@@ -19,6 +19,7 @@ const (
 type NsqOutputConfig struct {
 	Addresses      []string `toml:"addresses"`
 	Topic          string   `toml:"topic"`
+	TopicField     string   `toml:"topic_field"`
 	Mode           string   `toml:"mode"`
 	RetryQueueSize uint64   `toml:"retry_queue_size"`
 	MaxMsgRetries  uint64   `toml:"max_msg_retries"`
@@ -248,6 +249,7 @@ func (output *NsqOutput) Run(runner pipeline.OutputRunner,
 	output.runner = runner
 	inChan := runner.InChan()
 	ok := true
+	topic := output.Topic
 
 	defer output.cleanup()
 
@@ -257,11 +259,14 @@ func (output *NsqOutput) Run(runner pipeline.OutputRunner,
 			if !ok {
 				return nil
 			}
+			if output.TopicField != "" {
+				topic = pack.Message.GetFields()[output.TopicField]
+			}
 			outgoing, err = output.runner.Encode(pack)
 			if err != nil {
 				runner.LogError(err)
 			} else {
-				err = output.sendMessage(outgoing)
+				err = output.sendMessage(topic, outgoing)
 				if err != nil {
 					output.runner.LogError(err)
 					err = output.retryHelper.Wait()
@@ -283,7 +288,7 @@ func (output *NsqOutput) Run(runner pipeline.OutputRunner,
 			if !ok {
 				return nil
 			}
-			err = output.sendMessage(msg.Body)
+			err = output.sendMessage(topic, msg.Body)
 			if err != nil {
 				output.runner.LogError(err)
 				err = output.retryHelper.Wait()
@@ -316,18 +321,18 @@ func (output *NsqOutput) cleanup() {
 // deliver messages to a corresponding nsq producer. If there is more than one
 // producer it uses RoundRobin or HostPool strategies according to the config
 // option.
-func (output *NsqOutput) sendMessage(body []byte) (err error) {
+func (output *NsqOutput) sendMessage(topic string, body []byte) (err error) {
 	switch output.Mode {
 	case ModeRoundRobin:
 		counter := atomic.AddUint64(&output.counter, 1)
 		idx := counter % uint64(len(output.Addresses))
 		addr := output.Addresses[idx]
 		p := output.producers[addr]
-		err = p.PublishAsync(output.Topic, body, output.respChan, body)
+		err = p.PublishAsync(topic, body, output.respChan, body)
 	case ModeHostPool:
 		hostPoolResponse := output.hostPool.Get()
 		p := output.producers[hostPoolResponse.Host()]
-		err = p.PublishAsync(output.Topic, body, output.respChan, body, hostPoolResponse)
+		err = p.PublishAsync(topic, body, output.respChan, body, hostPoolResponse)
 	}
 	return
 }
