@@ -260,7 +260,7 @@ func (output *NsqOutput) Run(runner pipeline.OutputRunner,
 				return nil
 			}
 			if output.TopicField != "" {
-				topic = pack.Message.GetFields()[output.TopicField]
+				topic = *pack.Message.GetFields()[output.TopicField]
 			}
 			outgoing, err = output.runner.Encode(pack)
 			if err != nil {
