@@ -3,12 +3,14 @@ package nsq
 import (
 	"errors"
 	"fmt"
-	"github.com/bitly/go-hostpool"
-	"github.com/bitly/go-nsq"
-	"github.com/mozilla-services/heka/pipeline"
-	"github.com/mozilla-services/heka/plugins/tcp"
 	"sync/atomic"
 	"time"
+
+	"github.com/bitly/go-hostpool"
+	"github.com/mozilla-services/heka/pipeline"
+	"github.com/mozilla-services/heka/plugins/tcp"
+	"github.com/nsqio/go-nsq"
+	//	"github.com/pborman/uuid"
 )
 
 const (
@@ -285,7 +287,7 @@ func (output *NsqOutput) Run(runner pipeline.OutputRunner,
 					output.retryHelper.Reset()
 				}
 			}
-			pack.Recycle()
+			pack.Recycle(nil)
 		case msg, ok = <-output.retryChan:
 			if !ok {
 				return nil

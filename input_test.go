@@ -2,15 +2,17 @@ package nsq
 
 import (
 	"fmt"
-	"github.com/bitly/go-nsq"
+	"sync"
+
 	"github.com/mozilla-services/heka/pipeline"
 	pipeline_ts "github.com/mozilla-services/heka/pipeline/testsupport"
 	"github.com/mozilla-services/heka/pipelinemock"
 	"github.com/mozilla-services/heka/plugins"
 	plugins_ts "github.com/mozilla-services/heka/plugins/testsupport"
+	"github.com/nsqio/go-nsq"
+	"github.com/pborman/uuid"
 	"github.com/rafrombrc/gomock/gomock"
 	gs "github.com/rafrombrc/gospec/src/gospec"
-	"sync"
 )
 
 func NsqInputSpec(c gs.Context) {

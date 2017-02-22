@@ -1,13 +1,14 @@
 package nsq
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"fmt"
-	"github.com/bitly/go-nsq"
+	"time"
+
 	"github.com/mozilla-services/heka/message"
 	"github.com/mozilla-services/heka/pipeline"
 	"github.com/mozilla-services/heka/plugins/tcp"
-	"time"
+	"github.com/nsqio/go-nsq"
+	"github.com/pborman/uuid"
 )
 
 type NsqInputConfig struct {
